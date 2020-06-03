@@ -1,36 +1,27 @@
+const User = require('./model/user')
+
 exports.auth = (req,res,next)=>{
 
     console.log(req.session)
 
-    if(!req.session.user){
+    if(req.session.userId===null)
+    return res.json(401,{result:null,message:'You are not logged In',success:false})
 
-        var authHeader = req.headers.authorization
+    if(req.session.userId!==null) {
+        console.log('Inside')
+        User.findById(req.session.userId,(err,user)=>{
+            
+            if(err)
+            return res.json(501,{result:null,success:false,message:'Internal Server Error'})
 
-        if(!authHeader){
-            res.setHeader('WWW-Authenticate', 'Basic')
-            return res.json(401,{result:null, message: "you need to authenticate", success:false})
-        }
-    
-        var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':') //array containing user and pass
-        
-        var username = auth[0]
-        var password = auth[1]
-        console.log(authHeader)
-        console.log(username+" "+password)
-        if(username!=='arsh.kk'||password!=='arshdeep1234') return res.json({result:null,message:"username or pass is not correct", success:false})
+            if(user===null)
+            return res.json(401,{result:null,success:false,message:'Invalid Cookies or Session'})
 
-        req.session.user='arsh.kk'
-        next()
-
+            next()
+        })
+     
     }
-    else {
-        if(req.session.user!=='arsh.kk'){
-            return res.json(401,{result:null, message: "you need to authenticate", success:false})
 
-        }
-        
-        next()
-  
-    }
+
   
 }
